@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous 3D Simulator | Local Autopilot Testbed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-container">
+        <!-- Top Status Bar -->
+        <header class="status-bar glass">
+            <div class="logo">
+                <span class="pulse-indicator"></span>
+                <h1>SMARTDRIVE <span class="sub">AUTOPILOT v1.0</span></h1>
+            </div>
+            <div class="system-stats">
+                <div class="stat-pill"><span class="label">MODE:</span> <span id="driving-mode" class="val manual">MANUAL OVERRIDE</span></div>
+                <div class="stat-pill"><span class="label">FPS:</span> <span id="fps-counter" class="val">60</span></div>
+                <div class="stat-pill"><span class="label">BACKEND:</span> <span id="backend-status" class="val online">ONLINE</span></div>
+            </div>
+        </header>
+
+        <!-- Left Sidebar: Manual Controls -->
+        <aside class="sidebar left-sidebar">
+            <!-- Manual Controls Cheat-Sheet -->
+            <section class="panel glass manual-panel">
+                <h2>MANUAL CONTROLS</h2>
+                <div class="shortcut-list">
+                    <div class="shortcut"><span class="key">▲</span><span>ACCELERATE</span></div>
+                    <div class="shortcut"><span class="key">▼</span><span>BRAKE / REVERSE</span></div>
+                    <div class="shortcut"><span class="key">◀</span><span>STEER LEFT</span></div>
+                    <div class="shortcut"><span class="key">▶</span><span>STEER RIGHT</span></div>
+                    <div class="shortcut"><span class="key">SPACE</span><span>HANDBRAKE</span></div>
+                </div>
+                <div class="hint">
+                    * Pressing any manual key instantly overrides autopilot.
+                </div>
+            </section>
+        </aside>
+
+        <!-- Right Panels: Telemetry & Controls -->
+        <aside class="sidebar right-sidebar">
+            <!-- Telemetry Dashboard -->
+            <section class="panel glass telemetry-panel">
+                <h2>TELEMETRY DATA</h2>
+                <div class="speed-gauge-container">
+                    <div class="speed-dial">
+                        <svg class="dial-svg" viewBox="0 0 100 100">
+                            <circle class="dial-track" cx="50" cy="50" r="40" />
+                            <circle id="dial-progress" class="dial-progress" cx="50" cy="50" r="40" />
+                        </svg>
+                        <div class="speed-display">
+                            <span id="speed-val">0</span>
+                            <span class="unit">KM/H</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="m-label">ACCELERATION</span>
+                        <span id="accel-val" class="m-val font-mono">0.00 <span class="m-unit">m/s²</span></span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="m-label">DISTANCE</span>
+                        <span id="dist-val" class="m-val font-mono">0.00 <span class="m-unit">m</span></span>
+                    </div>
+                    <div class="metric-card warning-state" id="collisions-card">
+                        <span class="m-label">COLLISIONS</span>
+                        <span id="coll-val" class="m-val font-mono font-bold">0</span>
+                    </div>
+                    <div class="metric-card" id="safety-card">
+                        <span class="m-label">SAFETY INDEX</span>
+                        <span id="safety-val" class="m-val font-mono success-text">100%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Autopilot Routing -->
+            <section class="panel glass routing-panel">
+                <h2>SELF-PATHING NAVIGATION</h2>
+                <div class="control-group">
+                    <label for="start-node">START JUNCTION</label>
+                    <select id="start-node" class="glass-input">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="end-node">DESTINATION JUNCTION</label>
+                    <select id="end-node" class="glass-input">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <button id="btn-route" class="btn primary-btn btn-glow">ENGAGE AUTOPILOT</button>
+                <button id="btn-stop-autopilot" class="btn danger-btn hidden">DISENGAGE AUTOPILOT</button>
+            </section>
+
+            <!-- Simulation Controls -->
+            <section class="panel glass settings-panel">
+                <h2>SIMULATOR SETTINGS</h2>
+                <div class="control-group" style="display: none;">
+                    <div class="flex-row">
+                        <label for="traffic-slider">TRAFFIC CARS: <span id="traffic-count-label">5</span></label>
+                    </div>
+                    <input type="range" id="traffic-slider" min="0" max="15" value="5" step="1" class="glass-slider">
+                </div>
+                <div class="control-group checkbox-group">
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-lidar" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                    <span>VISUALIZE LIDAR SENSORS</span>
+                </div>
+                <div class="control-group checkbox-group">
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-pedestrians" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                    <span>SIMULATE PEDESTRIANS</span>
+                </div>
+                <div class="control-group">
+                    <label for="time-slider">TIME OF DAY / LIGHTING</label>
+                    <input type="range" id="time-slider" min="0" max="2" value="0" step="1" class="glass-slider">
+                    <div class="slider-labels font-mono">
+                        <span>DAY</span>
+                        <span>SUNSET</span>
+                        <span>NIGHT</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>CAMERA VIEWPORT</label>
+                    <div class="btn-grid">
+                        <button class="btn cam-btn active" data-cam="follow">FOLLOW</button>
+                        <button class="btn cam-btn" data-cam="driver">DRIVER</button>
+                        <button class="btn cam-btn" data-cam="top">TOP-DOWN</button>
+                        <button class="btn cam-btn" data-cam="orbit">FREE ORBIT</button>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+    </div>
+
+    <!-- Application JavaScript Entry Point -->
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

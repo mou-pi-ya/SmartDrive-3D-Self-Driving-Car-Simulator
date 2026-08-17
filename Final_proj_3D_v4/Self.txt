@@ -1,0 +1,10 @@
+1.Open terminal in this directory: cd C:\Users\Debarshi Chatterjee\OneDrive\Desktop\Final_proj_3D_v4
+	optional: pip install flask flask-cors matplotlib numpy
+2. backend start: python app.py
+	check: http://127.0.0.1:5000
+3. open new terminal
+	optional: npm install
+4. npm run dev
+5. http://localhost:3000
+
+
